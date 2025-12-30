@@ -11,7 +11,8 @@ from untils import xiaohongshu_generator, generate_content_from_media
 app = Flask(__name__)
 
 # 配置上传文件夹
-UPLOAD_FOLDER = 'uploads'
+# 在Vercel等Serverless环境中，只有/tmp目录是可写的
+UPLOAD_FOLDER = os.path.join('/tmp', 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'mp4', 'avi', 'mov', 'mkv', 'webm'}
 MAX_CONTENT_LENGTH = 50 * 1024 * 1024  # 50MB
 
