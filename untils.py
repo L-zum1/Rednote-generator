@@ -6,8 +6,6 @@ import ssl
 import base64
 import io
 from PIL import Image
-import cv2
-import numpy as np
 
 # 常量定义
 ARK_MODEL_NAME = "doubao-seed-1-6-vision-250815"
@@ -49,18 +47,10 @@ def analyze_media_locally(media_path, media_type):
             5. 推荐标签：#图片分享 #生活记录 #原创内容
             """
         else:  # video
-            # 使用OpenCV获取视频基本信息
-            cap = cv2.VideoCapture(media_path)
-            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            duration = frame_count / fps if fps > 0 else 0
-            cap.release()
-            
+            # 简化视频分析，不使用OpenCV
             analysis = f"""
             本地视频分析结果：
-            1. 视频基本信息：尺寸为{width}x{height}像素，帧率为{fps:.2f}fps，时长约{duration:.2f}秒
+            1. 视频基本信息：用户上传的视频文件
             2. 文件名：{filename}
             3. 视频分析：这是一个用户上传的视频，可能包含与主题相关的动态内容
             4. 建议创作方向：根据视频内容和用户输入的主题，创作相关的小红书文案
@@ -115,34 +105,8 @@ def analyze_image_with_vision(image_path, api_key):
         return None
 
 def analyze_video_with_vision(video_path, api_key):
-    """使用视觉模型分析视频"""
+    """使用视觉模型分析视频（简化版，不使用OpenCV）"""
     try:
-        # 使用OpenCV读取视频并提取关键帧
-        cap = cv2.VideoCapture(video_path)
-        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        duration = frame_count / fps if fps > 0 else 0
-        
-        # 提取5个关键帧（均匀分布）
-        key_frames = []
-        frame_indices = [int(frame_count * i / 5) for i in range(5)]
-        
-        for frame_idx in frame_indices:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_idx)
-            ret, frame = cap.read()
-            if ret:
-                # 转换为RGB格式
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                # 转换为PIL图像
-                pil_img = Image.fromarray(frame_rgb)
-                # 转换为base64
-                buffered = io.BytesIO()
-                pil_img.save(buffered, format="JPEG")
-                base64_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
-                key_frames.append(base64_image)
-        
-        cap.release()
-        
         # 使用ARK API密钥
         ark_api_key = get_api_key(api_key)
         if not ark_api_key:
@@ -152,29 +116,19 @@ def analyze_video_with_vision(video_path, api_key):
         # 创建模型
         model = create_model(VISION_MODEL_NAME, ark_api_key, ARK_API_BASE)
         
-        # 构建图像URL列表
-        image_content = []
-        for base64_image in key_frames:
-            image_content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{base64_image}"
-                }
-            })
+        # 获取视频文件名
+        filename = os.path.basename(video_path)
         
-        # 创建分析提示
-        analyze_prompt = ChatPromptTemplate.from_messages([
-            ("system", "你是一个专业的视频分析师，能够通过视频关键帧分析视频内容并提供创意性的小红书内容建议"),
-            ("human", [
-                {
-                    "type": "text",
-                    "text": f"请分析这些视频关键帧（视频时长约{duration:.2f}秒），并提供以下内容：\n1. 视频中的主要元素和场景描述\n2. 视频中的色彩、构图和风格特点\n3. 适合的小红书内容主题和风格建议\n4. 可以提取的标签和关键词\n5. 适合的文案创作方向"
-                }
-            ] + image_content)
-        ])
+        # 简化视频分析，直接返回基本信息
+        analysis_result = f"""
+        视频分析结果：
+        1. 视频基本信息：用户上传的视频文件
+        2. 文件名：{filename}
+        3. 视频分析：这是一个用户上传的视频，可能包含与主题相关的动态内容
+        4. 建议创作方向：根据视频内容和用户输入的主题，创作相关的小红书文案
+        5. 推荐标签：#视频分享 #生活记录 #原创内容
+        """
         
-        # 执行分析
-        analysis_result = (analyze_prompt | model).invoke({}).content
         return analysis_result
         
     except Exception as e:

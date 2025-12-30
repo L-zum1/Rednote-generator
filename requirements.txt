@@ -13,9 +13,3 @@ openai>=1.109.0
 
 # 图像处理库
 Pillow>=12.0.0
-
-# 视频处理库
-opencv-python-headless>=4.11.0
-
-# 数值计算库
-numpy>=1.26.0
