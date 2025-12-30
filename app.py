@@ -96,8 +96,14 @@ def analyze_media():
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         file.save(file_path)
         
-        # 分析媒体文件类型
-        file_type = 'image' if file.content_type and file.content_type.startswith('image/') else 'video'
+        # 分析媒体文件类型（同时检查content_type和文件扩展名）
+        file_type = 'image'
+        # 首先检查content_type
+        if file.content_type and not file.content_type.startswith('image/'):
+            # 然后检查文件扩展名
+            file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+            if file_ext not in ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp']:
+                file_type = 'video'
         
         # 生成基于媒体的内容
         title, content, media_analysis = generate_content_from_media(
@@ -140,6 +146,6 @@ def analyze_media():
         })
 
 if __name__ == '__main__':
-    # 可以通过环境变量PORT设置端口号，默认为5000
-    port = int(os.environ.get('PORT', 5000))
-    app.run(debug=True, port=port)
+    # 可以通过环境变量PORT设置端口号，使用5001避免与AirPlay Receiver冲突
+    port = int(os.environ.get('PORT', 5001))
+    app.run(debug=True, host='0.0.0.0', port=port)
