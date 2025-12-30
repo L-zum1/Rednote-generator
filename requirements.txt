@@ -1,0 +1,21 @@
+# 小红书内容生成器项目依赖
+
+# Web框架
+flask>=2.3.0
+werkzeug>=3.1.0
+
+# LangChain核心组件
+langchain-core>=0.1.9
+langchain-openai>=0.0.7
+
+# OpenAI API
+openai>=1.109.0
+
+# 图像处理库
+Pillow>=12.0.0
+
+# 视频处理库
+opencv-python-headless>=4.11.0
+
+# 数值计算库
+numpy>=1.26.0
